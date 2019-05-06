@@ -20,15 +20,19 @@ namespace Labs_LinqToObjects
 
             var groupA = new Group();
 
-            int OldestIn(IEnumerable<Person> people) => (from g2 in people select g2.Age).Max();
+            int AgeOfOldest(IEnumerable<Person> people) => (from g in people select g.Age).Max();
             IEnumerable<Person> WithoutFriends(IEnumerable<Person> people) => from g in people where g.FriendsListInternal == null || g.FriendsListInternal.Count == 0 select g;
             IEnumerable<Person> ConsideringHimAsFriend(Person who, IEnumerable<Person> people) => from g in people where g.Friends.Contains(who) select g;
             void WriteGroup(IEnumerable<Person> people)
             {
-                foreach (var man in people)
-                    Console.WriteLine(man);
+				Console.WriteLine("Main: foreach:");
+				foreach (var man in people)
+				{
+					Console.Write("Main: got ");
+					Console.WriteLine(man);
+				}
             }
-            
+
             HighlightedWriteLine("Assignment 1: Vsechny osoby, ktere nepovazuji nikoho za sveho pritele.");
             WriteGroup(WithoutFriends(groupA)); 
 
@@ -38,11 +42,12 @@ namespace Labs_LinqToObjects
 
             Console.WriteLine();
             HighlightedWriteLine("Assignment 3: Vsechny osoby, ktere jsou ve skupine nejstarsi, a jejichz jmeno zacina na pismeno T nebo vetsi.");
-            WriteGroup(from g in groupA where (int)g.Name[0] >= (int)'T' where g.Age == OldestIn(groupA) select g);
+			 int maxAgeOfAll = AgeOfOldest(groupA);
+			WriteGroup(from g in groupA where (int)g.Name[0] >= (int)'T' where g.Age == maxAgeOfAll select g);
 
             Console.WriteLine();
             HighlightedWriteLine("Assignment 4: Vsechny osoby, ktere jsou starsi nez vsichni jejich pratele.");
-            WriteGroup(from g in groupA where g.Friends.Count() == 0 || g.Age > OldestIn(g.Friends) select g);
+            WriteGroup(from g in groupA where g.Friends.Count() == 0 || g.Age > AgeOfOldest(g.Friends) select g);
 
             Console.WriteLine();
             HighlightedWriteLine("Assignment 5: Vsechny osoby, ktere nemaji zadne pratele (ktere nikoho nepovazuji za sveho pritele, a zaroven ktere nikdo jiny nepovazuje za sveho pritele).");
@@ -50,20 +55,33 @@ namespace Labs_LinqToObjects
 
             Console.WriteLine();
             HighlightedWriteLine("Assignment 6: Vsechny osoby, ktere jsou necimi nejstarsimi prateli (s opakovanim).");
-            WriteGroup(from g in groupA where g.Age == OldestIn(from g2 in groupA where g2));
+            WriteGroup((from g in groupA select (from g2 in g.Friends where g2.Age == AgeOfOldest(g.Friends) select g2)).SelectMany(x => x));
 
             Console.WriteLine();
             HighlightedWriteLine("Assignment 6B: Vsechny osoby, ktere jsou necimi nejstarsimi prateli (bez opakovani).");
+			WriteGroup((from g in groupA select (from g2 in g.Friends where g2.Age == AgeOfOldest(g.Friends) select g2)).SelectMany(x => x).Distinct());
 
-            Console.WriteLine();
+			Console.WriteLine();
             HighlightedWriteLine("Assignment 7: Vsechny osoby, ktere jsou nejstarsimi prateli osoby starsi nez ony samy (s opakovanim).");
+			WriteGroup((from g in groupA select (from g2 in g.Friends where g2.Age < g.Age
+												 where g2.Age == AgeOfOldest(g.Friends) select g2)).SelectMany(x => x));
 
-            Console.WriteLine();
+			Console.WriteLine();
             HighlightedWriteLine("Assignment 7B: Vsechny osoby, ktere jsou nejstarsimi prateli osoby starsi nez ony samy (bez opakovani).");
+			WriteGroup((from g in groupA
+						select (from g2 in g.Friends
+								where g2.Age < g.Age
+								where g2.Age == AgeOfOldest(g.Friends)
+								select g2)).SelectMany(x => x).Distinct());
 
-            Console.WriteLine();
+			Console.WriteLine();
             HighlightedWriteLine("Assignment 7C: Vsechny osoby, ktere jsou nejstarsimi prateli osoby starsi nez ony samy (bez opakovani a setridene sestupne podle jmena osoby).");
-        }
+			WriteGroup((from g in groupA
+						select (from g2 in g.Friends
+								where g2.Age < g.Age
+								where g2.Age == AgeOfOldest(g.Friends)
+								select g2)).SelectMany(x => x).Distinct().OrderByDescending(x => x.Name));
+		}
 
         public static void HighlightedWriteLine(string s)
         {

@@ -1,2 +1,0 @@
-LinqToObjects.exe
-pause
